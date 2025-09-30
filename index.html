@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Poisson para "Ambos Marcan"</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .result-card {
+            background-color: #f3f4f6;
+        }
+        .btn-primary {
+            background-color: #1e40af; /* Azul oscuro */
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8; /* Azul más brillante */
+        }
+        input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Calculadora de Pronósticos de Fútbol</h1>
+            <p class="text-lg text-gray-600 mt-2">Modelo de Distribución de Poisson para "Ambos Marcan"</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Columna de Datos de Entrada -->
+            <div class="space-y-6">
+                <!-- Fase 1: Datos Base -->
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">📊 Fase 1: Datos de la Liga</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="totalMatches" class="block text-sm font-medium text-gray-700">Total Partidos Jugados en Liga</label>
+                            <input type="number" id="totalMatches" placeholder="Ej: 200" value="200">
+                        </div>
+                        <div>
+                            <label for="totalHomeGoals" class="block text-sm font-medium text-gray-700">Total Goles de Equipos Locales</label>
+                            <input type="number" id="totalHomeGoals" placeholder="Ej: 270" value="270">
+                        </div>
+                        <div>
+                            <label for="totalAwayGoals" class="block text-sm font-medium text-gray-700">Total Goles de Equipos Visitantes</label>
+                            <input type="number" id="totalAwayGoals" placeholder="Ej: 210" value="210">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">🏠 Datos del Equipo Local (A)</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="homeMatches" class="block text-sm font-medium text-gray-700">Partidos Jugados en Casa</label>
+                            <input type="number" id="homeMatches" placeholder="Ej: 20" value="20">
+                        </div>
+                        <div>
+                            <label for="homeGoalsFor" class="block text-sm font-medium text-gray-700">Goles Anotados en Casa</label>
+                            <input type="number" id="homeGoalsFor" placeholder="Ej: 35" value="35">
+                        </div>
+                        <div>
+                            <label for="homeGoalsAgainst" class="block text-sm font-medium text-gray-700">Goles Recibidos en Casa</label>
+                            <input type="number" id="homeGoalsAgainst" placeholder="Ej: 15" value="15">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2">✈️ Datos del Equipo Visitante (B)</h2>
+                    <div class="space-y-3">
+                        <div>
+                            <label for="awayMatches" class="block text-sm font-medium text-gray-700">Partidos Jugados de Visita</label>
+                            <input type="number" id="awayMatches" placeholder="Ej: 20" value="20">
+                        </div>
+                        <div>
+                            <label for="awayGoalsFor" class="block text-sm font-medium text-gray-700">Goles Anotados de Visita</label>
+                            <input type="number" id="awayGoalsFor" placeholder="Ej: 28" value="28">
+                        </div>
+                        <div>
+                            <label for="awayGoalsAgainst" class="block text-sm font-medium text-gray-700">Goles Recibidos de Visita</label>
+                            <input type="number" id="awayGoalsAgainst" placeholder="Ej: 25" value="25">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna de Resultados -->
+            <div class="space-y-6">
+                <div class="sticky top-6">
+                     <button id="calculateBtn" class="w-full btn-primary mb-6">
+                        Calcular Pronóstico
+                    </button>
+                    <div id="results" class="card result-card space-y-4 hidden">
+                        <h2 class="text-xl font-semibold text-center">Resultados del Pronóstico</h2>
+                        
+                        <!-- Resultado Principal -->
+                        <div id="main-prediction" class="text-center p-4 rounded-lg">
+                            <p class="text-gray-600 text-sm">¿Ambos equipos marcan?</p>
+                            <p id="btts-prediction" class="text-4xl font-bold"></p>
+                            <p id="btts-probability" class="font-semibold"></p>
+                        </div>
+                        
+                        <div class="text-center p-4 rounded-lg bg-white">
+                            <p class="text-gray-600 text-sm">Marcador más probable</p>
+                            <p id="score-prediction" class="text-2xl font-bold"></p>
+                            <p id="score-probability" class="font-semibold"></p>
+                        </div>
+
+                        <!-- Goles Esperados -->
+                        <div class="text-center p-4 rounded-lg bg-white">
+                            <h3 class="font-semibold mb-2">Goles Esperados (μ)</h3>
+                            <div class="flex justify-around">
+                                <div>
+                                    <p class="text-sm text-gray-600">Local</p>
+                                    <p id="expected-home" class="font-bold text-lg"></p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Visitante</p>
+                                    <p id="expected-away" class="font-bold text-lg"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- NUEVO: Tabla Over/Under -->
+                        <div class="bg-white p-4 rounded-lg">
+                            <h3 class="font-semibold mb-2 text-center">Mercados Más/Menos de (Over/Under)</h3>
+                            <table class="w-full text-center text-sm">
+                                <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="p-2 rounded-tl-md">Mercado</th>
+                                        <th class="p-2 rounded-tr-md">Probabilidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="over-under-table">
+                                    <!-- Filas generadas por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Tabla de Probabilidades -->
+                        <div class="bg-white p-4 rounded-lg">
+                            <h3 class="font-semibold mb-2 text-center">Probabilidad de Goles por Equipo</h3>
+                            <table class="w-full text-center text-sm">
+                                <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="p-2 rounded-tl-md">Goles</th>
+                                        <th class="p-2">Local (A)</th>
+                                        <th class="p-2 rounded-tr-md">Visitante (B)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="probabilities-table">
+                                    <!-- Filas generadas por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Función para calcular el factorial de un número
+        function factorial(n) {
+            if (n === 0 || n === 1) return 1;
+            let result = 1;
+            for (let i = 2; i <= n; i++) {
+                result *= i;
+            }
+            return result;
+        }
+
+        // Función para calcular la probabilidad de Poisson
+        function poissonProbability(mean, x) {
+            if (mean < 0) return 0;
+            const e = 2.718281828459045;
+            return (Math.pow(e, -mean) * Math.pow(mean, x)) / factorial(x);
+        }
+
+        document.getElementById('calculateBtn').addEventListener('click', () => {
+            // Fase 1: Recopilar Datos
+            const totalMatches = parseFloat(document.getElementById('totalMatches').value);
+            const totalHomeGoals = parseFloat(document.getElementById('totalHomeGoals').value);
+            const totalAwayGoals = parseFloat(document.getElementById('totalAwayGoals').value);
+
+            const homeMatches = parseFloat(document.getElementById('homeMatches').value);
+            const homeGoalsFor = parseFloat(document.getElementById('homeGoalsFor').value);
+            const homeGoalsAgainst = parseFloat(document.getElementById('homeGoalsAgainst').value);
+
+            const awayMatches = parseFloat(document.getElementById('awayMatches').value);
+            const awayGoalsFor = parseFloat(document.getElementById('awayGoalsFor').value);
+            const awayGoalsAgainst = parseFloat(document.getElementById('awayGoalsAgainst').value);
+
+            // Validar entradas
+            const allInputs = [totalMatches, totalHomeGoals, totalAwayGoals, homeMatches, homeGoalsFor, homeGoalsAgainst, awayMatches, awayGoalsFor, awayGoalsAgainst];
+            if (allInputs.some(isNaN) || allInputs.some(val => val < 0)) {
+                alert("Por favor, introduce valores numéricos válidos. No se permiten números negativos.");
+                return;
+            }
+
+            if (totalMatches <= 0 || homeMatches <= 0 || awayMatches <= 0) {
+                alert("El número de partidos jugados debe ser mayor que cero.");
+                return;
+            }
+
+            // Fase 2: Calcular Fuerzas de Ataque y Defensa
+            const avgHomeGoalsLeague = totalHomeGoals / totalMatches;
+            const avgAwayGoalsLeague = totalAwayGoals / totalMatches;
+            const homeAttackStrength = (homeGoalsFor / homeMatches) / avgHomeGoalsLeague;
+            const awayAttackStrength = (awayGoalsFor / awayMatches) / avgAwayGoalsLeague;
+            const homeDefenseStrength = (homeGoalsAgainst / homeMatches) / avgAwayGoalsLeague;
+            const awayDefenseStrength = (awayGoalsAgainst / awayMatches) / avgHomeGoalsLeague;
+            
+            // Fase 3: Proyectar Goles Esperados (μ)
+            const expectedHomeGoals = homeAttackStrength * awayDefenseStrength * avgHomeGoalsLeague;
+            const expectedAwayGoals = awayAttackStrength * homeDefenseStrength * avgAwayGoalsLeague;
+            
+            document.getElementById('expected-home').textContent = expectedHomeGoals.toFixed(2);
+            document.getElementById('expected-away').textContent = expectedAwayGoals.toFixed(2);
+
+            // Fase 4: Aplicar la Fórmula de Poisson
+            const homeProbabilities = [];
+            const awayProbabilities = [];
+            const maxGoals = 6; 
+
+            for (let i = 0; i <= maxGoals; i++) {
+                homeProbabilities.push(poissonProbability(expectedHomeGoals, i));
+                awayProbabilities.push(poissonProbability(expectedAwayGoals, i));
+            }
+            
+            // Fase 5: Crear la Matriz de Marcadores
+            let maxProb = 0;
+            let likelyHomeGoals = 0;
+            let likelyAwayGoals = 0;
+
+            for (let i = 0; i <= maxGoals; i++) {
+                for (let j = 0; j <= maxGoals; j++) {
+                    const scoreProbability = homeProbabilities[i] * awayProbabilities[j];
+                    if (scoreProbability > maxProb) {
+                        maxProb = scoreProbability;
+                        likelyHomeGoals = i;
+                        likelyAwayGoals = j;
+                    }
+                }
+            }
+
+            document.getElementById('score-prediction').textContent = `${likelyHomeGoals} - ${likelyAwayGoals}`;
+            document.getElementById('score-probability').textContent = `Prob: ${(maxProb * 100).toFixed(2)}%`;
+
+            // Fase 6: Calcular Probabilidades "Ambos Marcan"
+            const probHomeToScore = 1 - homeProbabilities[0];
+            const probAwayToScore = 1 - awayProbabilities[0];
+            const probBttsYes = probHomeToScore * probAwayToScore;
+            
+            // Mostrar resultado principal "Ambos Marcan"
+            const bttsPredictionEl = document.getElementById('btts-prediction');
+            const bttsProbabilityEl = document.getElementById('btts-probability');
+            const mainPredictionCard = document.getElementById('main-prediction');
+
+            if (probBttsYes > 0.5) {
+                bttsPredictionEl.textContent = "SÍ";
+                bttsPredictionEl.className = "text-4xl font-bold text-green-700";
+                bttsProbabilityEl.textContent = `Prob: ${(probBttsYes * 100).toFixed(2)}%`;
+                mainPredictionCard.className = "text-center p-4 rounded-lg bg-green-100";
+            } else {
+                bttsPredictionEl.textContent = "NO";
+                bttsPredictionEl.className = "text-4xl font-bold text-red-700";
+                bttsProbabilityEl.textContent = `Prob: ${((1-probBttsYes) * 100).toFixed(2)}%`;
+                mainPredictionCard.className = "text-center p-4 rounded-lg bg-red-100";
+            }
+
+            // NUEVO: Fase 7: Calcular Probabilidades Total Goles (Over/Under)
+            const totalGoalProbs = new Array(maxGoals * 2 + 1).fill(0);
+            for (let i = 0; i <= maxGoals; i++) {
+                for (let j = 0; j <= maxGoals; j++) {
+                    const total = i + j;
+                    if (total <= maxGoals * 2) {
+                        totalGoalProbs[total] += homeProbabilities[i] * awayProbabilities[j];
+                    }
+                }
+            }
+            
+            const overUnderTableBody = document.getElementById('over-under-table');
+            overUnderTableBody.innerHTML = '';
+            let cumulativeProb = 0;
+            const lines = [0.5, 1.5, 2.5, 3.5, 4.5];
+
+            for(let i = 0; i < lines.length; i++) {
+                 cumulativeProb += totalGoalProbs[i];
+                 let overProb = 1 - cumulativeProb;
+                 overUnderTableBody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2">Menos de ${lines[i]}</td>
+                        <td class="p-2 font-semibold text-amber-600">${(cumulativeProb * 100).toFixed(2)}%</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-2">Más de ${lines[i]}</td>
+                        <td class="p-2 font-semibold text-emerald-600">${(overProb * 100).toFixed(2)}%</td>
+                    </tr>
+                `;
+            }
+
+            // Llenar tabla de probabilidades por equipo
+            const tableBody = document.getElementById('probabilities-table');
+            tableBody.innerHTML = ''; 
+            for (let i = 0; i <= maxGoals; i++) {
+                const row = `
+                    <tr class="border-b">
+                        <td class="p-2 font-bold">${i}</td>
+                        <td class="p-2">${(homeProbabilities[i] * 100).toFixed(2)}%</td>
+                        <td class="p-2">${(awayProbabilities[i] * 100).toFixed(2)}%</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            }
+
+            document.getElementById('results').classList.remove('hidden');
+        });
+
+    </script>
+</body>
+</html>
+
